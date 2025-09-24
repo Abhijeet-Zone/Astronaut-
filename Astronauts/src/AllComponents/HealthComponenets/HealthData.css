@@ -1,0 +1,39 @@
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #1c2a3a;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.dashboard-container{
+
+  width: 100%;
+}
+th {
+  background: #0d2136;
+  color: #00ffcc;
+  text-align: left;
+}
+
+th, td {
+  padding: 12px;
+  color:  white;
+  border-bottom: 1px solid #333;
+}
+
+tr:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+td:last-child {
+  font-weight: bold;
+}
+
+body {
+  display: flex;
+  justify-content: center;  /* Horizontal center */
+  align-items: center;      /* Vertical center */
+  min-height: 100vh;        /* Full screen height */
+  margin: 0;
+  background: linear-gradient(to bottom, #004080, #001f3f); /* optional background */
+}

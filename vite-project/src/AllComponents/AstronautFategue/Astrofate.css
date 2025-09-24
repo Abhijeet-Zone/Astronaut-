@@ -1,0 +1,243 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Inter:wght@300;400;600&display=swap');
+
+:root {
+  --bg-deep: #040515;
+  --nebula1: #4f46e5;
+  --nebula2: #7c3aed;
+  --nebula3: #06b6d4;
+  --neon: #67e8f9;
+  --neon-strong: #22d3ee;
+  --cosmic: #a78bfa;
+  --panel: #0b0f29;
+  --green: #22c55e;
+  --red: #ef4444;
+  --amber: #f59e0b;
+  --muted: #94a3b8;
+}
+
+
+/* Deep space background with animated tech rings and nebula */
+.universe {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(1200px 800px at 70% 25%, rgba(124, 58, 237, 0.12), transparent 65%),
+    radial-gradient(900px 700px at 30% 70%, rgba(79, 70, 229, 0.13), transparent 60%),
+    radial-gradient(800px 600px at 85% 85%, rgba(6, 182, 212, 0.10), transparent 60%),
+    linear-gradient(180deg, #040515 0%, #080a1d 50%, #040515 100%);
+  filter: saturate(110%);
+}
+.stars, .stars2, .stars3 {
+  position: absolute;
+  inset: 0;
+  background-repeat: repeat;
+  background-size: contain;
+  animation: twinkle 12s linear infinite;
+  opacity: 0.7;
+  pointer-events: none;
+}
+.stars {
+  background-image:
+    radial-gradient(2px 2px at 20% 30%, #fff9, #fff0 60%),
+    radial-gradient(1.6px 1.6px at 80% 70%, #fff8, #fff0 60%),
+    radial-gradient(1.2px 1.2px at 50% 90%, #fff6, #fff0 60%);
+  animation-duration: 14s;
+}
+.stars2 {
+  background-image:
+    radial-gradient(1.4px 1.4px at 12% 82%, #fff8, #fff0 60%),
+    radial-gradient(1.1px 1.1px at 60% 18%, #fff7, #fff0 60%),
+    radial-gradient(1px 1px at 40% 50%, #fff6, #fff0 60%);
+  animation-duration: 18s;
+}
+.stars3 {
+  background-image:
+    radial-gradient(1px 1px at 30% 40%, #fff6, #fff0 60%),
+    radial-gradient(1.2px 1.2px at 75% 30%, #fff7, #fff0 60%),
+    radial-gradient(1.5px 1.5px at 55% 65%, #fff8, #fff0 60%);
+  animation-duration: 22s;
+}
+@keyframes twinkle {
+  0% { transform: translateY(0); opacity: 0.75; }
+  50% { opacity: 1; }
+  100% { transform: translateY(-20px); opacity: 0.75; }
+}
+
+.tech-rings {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+.ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 130vmin;
+  height: 130vmin;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 1px solid rgba(34, 211, 238, 0.15);
+  box-shadow: 0 0 40px rgba(124, 58, 237, 0.1), inset 0 0 60px rgba(34, 211, 238, 0.08);
+  animation: spin 60s linear infinite;
+}
+.ring:nth-child(2) {
+  width: 95vmin;
+  height: 95vmin;
+  animation-duration: 42s;
+  opacity: 0.8;
+}
+.ring:nth-child(3) {
+  width: 65vmin;
+  height: 65vmin;
+  animation-duration: 28s;
+  opacity: 0.65;
+}
+@keyframes spin {
+  from { rotate: 0deg; }
+  to { rotate: 360deg; }
+}
+
+.glass {
+  background: linear-gradient(180deg, rgba(22, 26, 56, 0.45), rgba(10, 13, 35, 0.35));
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35), inset 0 0 20px rgba(124, 58, 237, 0.08);
+}
+.neon {
+  text-shadow: 0 0 6px rgba(110, 231, 255, 0.55), 0 0 14px rgba(124, 58, 237, 0.45), 0 0 28px rgba(124, 58, 237, 0.25);
+}
+.head {
+  font-family: Orbitron, sans-serif;
+}
+.btn {
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: linear-gradient(180deg, rgba(21, 27, 47, 0.7), rgba(12, 18, 38, 0.6));
+  padding: 10px 14px;
+  border-radius: 12px;
+  color: #e6fbff;
+  font-weight: 600;
+  transition: .2s ease;
+  cursor: pointer;
+}
+.btn:hover {
+  transform: translateY(-1px);
+  box-shadow: inset 0 0 20px rgba(34, 211, 238, 0.12);
+}
+.btn:active {
+  transform: translateY(0);
+}
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.pill {
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(15, 23, 42, 0.5);
+}
+.badge {
+  font-family: Orbitron, sans-serif;
+  font-size: 10px;
+  letter-spacing: 1px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: rgba(14, 20, 40, 0.6);
+}
+.badge-green {
+  color: #a7f3d0;
+  border-color: rgba(34, 197, 94, 0.4);
+  box-shadow: inset 0 0 10px rgba(34, 197, 94, 0.15);
+}
+.badge-red {
+  color: #fecaca;
+  border-color: rgba(239, 68, 68, 0.4);
+  box-shadow: inset 0 0 10px rgba(239, 68, 68, 0.15);
+}
+.badge-amber {
+  color: #fde68a;
+  border-color: rgba(245, 158, 11, 0.45);
+  box-shadow: inset 0 0 10px rgba(245, 158, 11, 0.15);
+}
+
+.gauge {
+  width: 220px;
+  height: 220px;
+  position: relative;
+  filter: drop-shadow(0 0 18px rgba(34, 211, 238, 0.25));
+}
+.gauge .center-num {
+  font-family: Orbitron, sans-serif;
+  font-size: 44px;
+  letter-spacing: 1px;
+  color: #e6fbff;
+  text-shadow: 0 0 10px rgba(110, 231, 255, 0.6);
+}
+.gauge .label {
+  font-family: Orbitron, sans-serif;
+  font-size: 12px;
+  color: var(--muted);
+  letter-spacing: 2px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.label {
+  font-size: 12px;
+  color: #a5b4fc;
+  font-family: Orbitron, sans-serif;
+  letter-spacing: .08em;
+}
+.input {
+  background: rgba(10, 14, 35, 0.7);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 12px;
+  padding: 10px 12px;
+  color: #e6fbff;
+  outline: none;
+  transition: .15s ease;
+}
+.input:focus {
+  border-color: rgba(34, 211, 238, 0.6);
+  box-shadow: 0 0 0 4px rgba(34, 211, 238, 0.12)
+}
+.unit {
+  color: #93c5fd;
+  font-size: 12px;
+}
+
+.row-click {
+  cursor: pointer;
+}
+.row-click:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+/* --- Layout override: make Astronaut Fatigue panels in a ROW (CSS-only) --- */
+/* The main container uses Tailwind classes: flex-1 grid grid-cols-1 xl:grid-cols-3 ...
+   We override to flex row without touching JSX. */
+main.flex-1.grid {
+  display: flex !important;
+  flex-direction: row;
+  flex-wrap: wrap; /* allows wrapping on small screens while keeping row behavior */
+  align-items: stretch;
+  gap: 1.5rem; /* matches Tailwind gap-6 */
+}
+
+/* Make each panel flex to a reasonable width in the row */
+main.flex-1.grid > * {
+  flex: 1 1 360px; /* grows, shrinks, with a sensible base width */
+  min-width: 320px;
+}
+
+/* On very large screens, try to keep them on one line cleanly */
+@media (min-width: 1280px) {
+  main.flex-1.grid > * {
+    flex-basis: calc((100% - 2 * 1.5rem) / 3); /* roughly 3 in a row with gap-6 */
+  }
+}
