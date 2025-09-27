@@ -355,7 +355,7 @@ function Dashboard() {
           <article className="panel frame-bottom-center-left flex flex-col" onClick={() => navigate("/physico")}>
             <div className="panel-header">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold tracking-wide">PSYCHOLOGICAL</h3>
+                <h3 className="text-sm font-semibold tracking-wide">PSYCHOLOGICAL STRESS</h3>
                 <span className="chip">PSY</span>
               </div>
             </div>
