@@ -168,18 +168,36 @@
   position: relative;
   filter: drop-shadow(0 0 18px rgba(34, 211, 238, 0.25));
 }
+
 .gauge .center-num {
   font-family: Orbitron, sans-serif;
   font-size: 44px;
+  font-weight: 800;
   letter-spacing: 1px;
   color: #e6fbff;
   text-shadow: 0 0 10px rgba(110, 231, 255, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  line-height: 1;
+  margin-bottom: 6px;
+  /* Uplift the score to sit inside the gauge ring */
+  transform: translateY(-150px);
 }
+
 .gauge .label {
   font-family: Orbitron, sans-serif;
   font-size: 12px;
   color: var(--muted);
-  letter-spacing: 2px;
+  letter-spacing: 10px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 3px;
+  /* Lift the label together with the score to remain centered */
+  transform: translateY(-150px);
 }
 
 .field {
@@ -238,6 +256,6 @@ main.flex-1.grid > * {
 /* On very large screens, try to keep them on one line cleanly */
 @media (min-width: 1280px) {
   main.flex-1.grid > * {
-    flex-basis: calc((100% - 2 * 1.5rem) / 3); /* roughly 3 in a row with gap-6 */
+    flex-basis: calc((100% - 2 * 1.5rem) / 3);
   }
 }

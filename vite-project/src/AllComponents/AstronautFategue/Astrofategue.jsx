@@ -1,30 +1,35 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import Background from './Background';
 import Header from './Header';
 import InputsPanel from './InputsPanel';
 import GaugePanel from './GaugePanel';
 import AlertsPanel from './AlertsPanel';
-import "./Astrofate.css"
+import "./Astrofate.css";
 
 function Astrofategue() {
   // --- STATE MANAGEMENT ---
   const [formData, setFormData] = useState({
-    hr: '',
-    hrv: '',
-    spo2: '',
-    sleep: '',
-    activity: '5',
+    hr: '88',
+    hrv: '32',
+    spo2: '97',
+    sleep: '5.5',
+    activity: '8',
   });
   const [apiData, setApiData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
   // --- CONFIGURATION ---
-  const API_URL = 'http://127.0.0.1:5000/api/calculate_fatigue';
+  // Use relative path; Vite dev server will proxy /api to Flask (see vite.config.js)
+  const API_URL = `/api/calculate_fatigue`;
+
+  useEffect(() => {
+    // Auto-process data when component loads
+    processFatigueData();
+  }, []);
 
   // --- EVENT HANDLERS & LOGIC ---
-
   const handleInputChange = (e) => {
     const { id, value } = e.target;
     setFormData((prevData) => ({ ...prevData, [id]: value }));
@@ -34,29 +39,61 @@ function Astrofategue() {
     if (e) e.preventDefault();
     setIsLoading(true);
     setError(null);
-    setApiData(null);
+
+    console.log('Form data before processing:', formData);
 
     const payload = {
-      hr: parseInt(formData.hr) || 0,
-      hrv: parseInt(formData.hrv) || 0,
-      spo2: parseInt(formData.spo2) || 0,
-      sleep: parseFloat(formData.sleep) || 0,
-      activity: parseInt(formData.activity) || 0,
+      hr: formData.hr && formData.hr !== '' ? parseInt(formData.hr) : 0,
+      hrv: formData.hrv && formData.hrv !== '' ? parseInt(formData.hrv) : 0,
+      spo2: formData.spo2 && formData.spo2 !== '' ? parseInt(formData.spo2) : 0,
+      sleep: formData.sleep && formData.sleep !== '' ? parseFloat(formData.sleep) : 0,
+      activity: formData.activity && formData.activity !== '' ? parseInt(formData.activity) : 0,
     };
+    
+    console.log('Sending payload:', payload);
 
     try {
+      // Try a best-effort health check, but do not block the main request
+      let healthWarning = '';
+      try {
+        const healthRes = await fetch('/api/health');
+        if (!healthRes.ok) {
+          let msg = `health ${healthRes.status}`;
+          try { const t = await healthRes.text(); if (t) msg += `: ${t}`; } catch (_) {}
+          healthWarning = `Backend ${msg}`;
+        }
+      } catch (healthErr) {
+        healthWarning = `Backend healthcheck failed: ${healthErr.message}`;
+      }
+
       const response = await fetch(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `HTTP error! Status: ${response.status}`);
+      // Try to parse JSON safely, even on non-OK responses.
+      let data = null;
+      let text = '';
+      try {
+        data = await response.json();
+      } catch (parseErr) {
+        try { text = await response.text(); } catch (_) {}
       }
 
-      const data = await response.json();
+      if (!response.ok) {
+        const message = (data && (data.error || data.message)) || text || `HTTP error ${response.status}`;
+        throw new Error(message);
+      }
+
+      if (!data) {
+        // No JSON but OK status; treat as error for the UI
+        const msg = text && text.trim().length > 0 ? text : 'Empty response from server';
+        throw new Error(msg);
+      }
+
+      // success
+      console.log('Received response:', data);
       setApiData(data);
     } catch (err) {
       console.error('Error fetching fatigue data:', err);
@@ -67,13 +104,15 @@ function Astrofategue() {
   };
 
   const fillWithDemoData = () => {
-    setFormData({
+    const demoData = {
       hr: '88',
       hrv: '32',
       spo2: '97',
       sleep: '5.5',
       activity: '8',
-    });
+    };
+    console.log('Setting demo data:', demoData);
+    setFormData(demoData);
   };
 
   const fillWithRandomData = () => {
@@ -100,15 +139,8 @@ function Astrofategue() {
             handleInputChange={handleInputChange}
             processFatigueData={processFatigueData}
           />
-          <GaugePanel
-            formData={formData}
-            apiData={apiData}
-            error={error}
-          />
-          <AlertsPanel
-            apiData={apiData}
-            error={error}
-          />
+          <GaugePanel formData={formData} apiData={apiData} error={error} />
+          <AlertsPanel apiData={apiData} error={error} />
         </main>
       </div>
     </>

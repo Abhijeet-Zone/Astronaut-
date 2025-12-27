@@ -80,4 +80,4 @@ function InputsPanel({ formData, apiData, isLoading, handleInputChange, processF
   );
 }
 
-export default InputsPanel;
+export default InputsPanel;

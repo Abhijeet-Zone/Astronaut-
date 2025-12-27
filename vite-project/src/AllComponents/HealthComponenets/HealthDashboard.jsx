@@ -1,5 +1,5 @@
 import React from "react";
-import healthData from "./health.js";
+import healthData from "./health.jsx";
 import "./HealthData.css"
 function HealthDashboard() {
   return (

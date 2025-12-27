@@ -31,4 +31,4 @@ function Header({ onDemo, onRandomize }) {
   );
 }
 
-export default Header;
+export default Header;

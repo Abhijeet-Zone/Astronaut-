@@ -1,23 +1,4 @@
-# -----------------------------------------------------------------------------
-# INTERACTIVE SPACE FATIGUE - BACKEND SERVER
-# -----------------------------------------------------------------------------
-# This script runs a Flask web server that provides an API endpoint to analyze
-# astronaut telemetry data using the Google Gemini API.
-#
-# --- SETUP INSTRUCTIONS ---
-# 1. Save this file as `app.py`.
-#
-# 2. Create a file named `.env` in the same directory and add your API key:
-#    GEMINI_API_KEY="YOUR_GEMINI_API_KEY_HERE"
-#
-# 3. Install required libraries via pip:
-#    pip install Flask Flask-Cors google-generativeai python-dotenv
-#
-# 4. Run the server from your terminal:
-#    python app.py
-#
-# The server will start on http://127.0.0.1:5000.
-# -----------------------------------------------------------------------------
+
 
 import os
 import json

@@ -1,60 +1,58 @@
 import React, { useState, useRef, useEffect } from 'react';
 import './EyeScanner.css';
+import { analyzeEyesWithGemini } from '../../services/gemini';
 
 
 const EyeScanner = () => {
   const [isScanning, setIsScanning] = useState(false);
-  const [scanProgress, setScanProgress] = useState(0);
   const [scanResults, setScanResults] = useState(null);
   const [selectedEye, setSelectedEye] = useState('both');
   const [cameraActive, setCameraActive] = useState(false);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
+  const [leftFile, setLeftFile] = useState(null);
+  const [rightFile, setRightFile] = useState(null);
+  const [leftPreview, setLeftPreview] = useState(null);
+  const [rightPreview, setRightPreview] = useState(null);
 
-  // Simulated eye health data
-  const generateScanResults = () => {
-    const baseResults = {
-      timestamp: new Date(),
-      overallHealth: Math.random() > 0.3 ? 'Good' : 'Concerning',
-      leftEye: {
-        visualAcuity: (0.8 + Math.random() * 0.4).toFixed(1),
-        intraocularPressure: (12 + Math.random() * 8).toFixed(1),
-        opticDiscSwelling: Math.random() > 0.7 ? 'Detected' : 'Normal',
-        retinalThickness: (250 + Math.random() * 100).toFixed(0),
-        bloodVesselChanges: Math.random() > 0.6 ? 'Present' : 'Normal'
-      },
-      rightEye: {
-        visualAcuity: (0.8 + Math.random() * 0.4).toFixed(1),
-        intraocularPressure: (12 + Math.random() * 8).toFixed(1),
-        opticDiscSwelling: Math.random() > 0.7 ? 'Detected' : 'Normal',
-        retinalThickness: (250 + Math.random() * 100).toFixed(0),
-        bloodVesselChanges: Math.random() > 0.6 ? 'Present' : 'Normal'
-      },
-      sansRisk: Math.random() > 0.5 ? 'Low' : 'Moderate',
-      recommendations: []
-    };
+  // No longer simulate data; we'll fetch AI results from Gemini
+  
+  // Helper: capture current camera frame into a File for a target eye
+  const captureFrameToEye = async (targetEye) => {
+    return new Promise((resolve) => {
+      if (!videoRef.current || !canvasRef.current) return resolve(null);
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext('2d');
+      canvas.width = videoRef.current.videoWidth;
+      canvas.height = videoRef.current.videoHeight;
+      ctx.drawImage(videoRef.current, 0, 0);
 
-    // Generate recommendations based on results
-    if (baseResults.leftEye.opticDiscSwelling === 'Detected' || baseResults.rightEye.opticDiscSwelling === 'Detected') {
-      baseResults.recommendations.push('Immediate consultation with flight surgeon required');
-      baseResults.overallHealth = 'Concerning';
-    }
-    
-    if (parseFloat(baseResults.leftEye.intraocularPressure) > 18 || parseFloat(baseResults.rightEye.intraocularPressure) > 18) {
-      baseResults.recommendations.push('Monitor intraocular pressure closely');
-    }
-    
-    if (baseResults.sansRisk === 'Moderate') {
-      baseResults.recommendations.push('Implement SANS countermeasures protocol');
-      baseResults.recommendations.push('Schedule follow-up scan in 48 hours');
-    }
+      // Apply same enhancement as manual capture
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imageData.data;
+      for (let i = 0; i < data.length; i += 4) {
+        data[i] = Math.min(255, data[i] * 1.5);
+        data[i + 1] = data[i + 1] * 0.7;
+        data[i + 2] = data[i + 2] * 0.3;
+      }
+      ctx.putImageData(imageData, 0, 0);
 
-    if (baseResults.recommendations.length === 0) {
-      baseResults.recommendations.push('Continue routine eye health monitoring');
-      baseResults.recommendations.push('Maintain proper lighting during work');
-    }
-
-    return baseResults;
+      canvas.toBlob((blob) => {
+        if (!blob) return resolve(null);
+        const file = new File([blob], `${targetEye}-eye.png`, { type: 'image/png' });
+        const url = URL.createObjectURL(blob);
+        if (targetEye === 'left') {
+          if (leftPreview) URL.revokeObjectURL(leftPreview);
+          setLeftFile(file);
+          setLeftPreview(url);
+        } else {
+          if (rightPreview) URL.revokeObjectURL(rightPreview);
+          setRightFile(file);
+          setRightPreview(url);
+        }
+        resolve(file);
+      }, 'image/png');
+    });
   };
 
   const startCamera = async () => {
@@ -86,31 +84,45 @@ const EyeScanner = () => {
   };
 
   const startScan = async () => {
-    if (!cameraActive) {
-      await startCamera();
-      setTimeout(() => performScan(), 1000);
-    } else {
-      performScan();
+    // Work with local vars to avoid relying on async state timing
+    let currLeft = leftFile;
+    let currRight = rightFile;
+
+    // If no files yet but camera is active, auto-capture into selected target
+    if (!currLeft && !currRight && cameraActive) {
+      const targetEye = selectedEye === 'both' ? 'left' : selectedEye;
+      const captured = await captureFrameToEye(targetEye);
+      if (captured) {
+        if (targetEye === 'left') currLeft = captured; else currRight = captured;
+      }
     }
-  };
-
-  const performScan = () => {
+    if (!currLeft && !currRight) {
+      alert('Please upload or capture at least one eye image (left and/or right).');
+      return;
+    }
     setIsScanning(true);
-    setScanProgress(0);
     setScanResults(null);
-
-    // Simulate scanning progress
-    const interval = setInterval(() => {
-      setScanProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setIsScanning(false);
-          setScanResults(generateScanResults());
-          return 100;
-        }
-        return prev + 2;
+    try {
+      const payload = {
+        leftFile: selectedEye !== 'right' ? currLeft : null,
+        rightFile: selectedEye !== 'left' ? currRight : null,
+      };
+      console.log('Analyzing with files:', {
+        hasLeft: !!payload.leftFile,
+        hasRight: !!payload.rightFile,
+        selectedEye,
       });
-    }, 100);
+      const results = await analyzeEyesWithGemini(payload);
+      setScanResults({
+        timestamp: new Date(),
+        ai: results,
+      });
+    } catch (e) {
+      console.error('Gemini analysis failed', e);
+      alert('Failed to analyze images. Please check your API key and network.');
+    } finally {
+      setIsScanning(false);
+    }
   };
 
   const captureRetinalImage = () => {
@@ -133,6 +145,25 @@ const EyeScanner = () => {
       }
       
       ctx.putImageData(imageData, 0, 0);
+
+      // Save captured image into the selected eye's file input
+      // If 'Both Eyes' is selected, default to Left for first capture
+      const targetEye = selectedEye === 'both' ? 'left' : selectedEye;
+
+      canvas.toBlob((blob) => {
+        if (!blob) return;
+        const file = new File([blob], `${targetEye}-eye.png`, { type: 'image/png' });
+        const url = URL.createObjectURL(blob);
+        if (targetEye === 'left') {
+          if (leftPreview) URL.revokeObjectURL(leftPreview);
+          setLeftFile(file);
+          setLeftPreview(url);
+        } else if (targetEye === 'right') {
+          if (rightPreview) URL.revokeObjectURL(rightPreview);
+          setRightFile(file);
+          setRightPreview(url);
+        }
+      }, 'image/png');
     }
   };
 
@@ -202,12 +233,10 @@ const EyeScanner = () => {
                         stroke="#00d4ff"
                         strokeWidth="4"
                         fill="none"
-                        strokeDasharray={`${2 * Math.PI * 50}`}
-                        strokeDashoffset={`${2 * Math.PI * 50 * (1 - scanProgress / 100)}`}
                         className="progress-circle"
                       />
                     </svg>
-                    <div className="progress-text">{scanProgress}%</div>
+                    <div className="progress-text">Analyzing...</div>
                   </div>
                 </div>
               </div>
@@ -228,6 +257,43 @@ const EyeScanner = () => {
               </select>
             </div>
 
+            <div className="upload-controls">
+              <div className="upload-field">
+                <label>Left Eye Image</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  disabled={isScanning}
+                  onChange={(e) => {
+                    const f = e.target.files?.[0] || null;
+                    setLeftFile(f);
+                    if (leftPreview) URL.revokeObjectURL(leftPreview);
+                    setLeftPreview(f ? URL.createObjectURL(f) : null);
+                  }}
+                />
+                {leftPreview && (
+                  <img src={leftPreview} alt="Left eye preview" style={{ width: 100, height: 100, objectFit: 'cover', marginTop: 8, borderRadius: 6 }} />
+                )}
+              </div>
+              <div className="upload-field">
+                <label>Right Eye Image</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  disabled={isScanning}
+                  onChange={(e) => {
+                    const f = e.target.files?.[0] || null;
+                    setRightFile(f);
+                    if (rightPreview) URL.revokeObjectURL(rightPreview);
+                    setRightPreview(f ? URL.createObjectURL(f) : null);
+                  }}
+                />
+                {rightPreview && (
+                  <img src={rightPreview} alt="Right eye preview" style={{ width: 100, height: 100, objectFit: 'cover', marginTop: 8, borderRadius: 6 }} />
+                )}
+              </div>
+            </div>
+
             <div className="control-buttons">
               {!cameraActive ? (
                 <button className="camera-btn" onClick={startCamera}>
@@ -244,7 +310,7 @@ const EyeScanner = () => {
                 onClick={startScan}
                 disabled={isScanning}
               >
-                {isScanning ? '🔍 Scanning...' : '🔍 Start Eye Scan'}
+                {isScanning ? '🔍 Analyzing...' : '🔍 Analyze Eye Images'}
               </button>
               
               <button 
@@ -261,57 +327,71 @@ const EyeScanner = () => {
         {scanResults && (
           <div className="results-section">
             <div className="results-header">
-              <h3>📊 Scan Results</h3>
+              <h3>📊 eye Analysis Results</h3>
               <div className="scan-timestamp">
                 {scanResults.timestamp.toLocaleString()}
               </div>
             </div>
-
-            <div className="overall-status">
-              <div className="status-indicator">
-                <span 
-                  className="status-dot"
-                  style={{ backgroundColor: getHealthColor(scanResults.overallHealth) }}
-                ></span>
-                Overall Eye Health: <strong style={{ color: getHealthColor(scanResults.overallHealth) }}>
-                  {scanResults.overallHealth}
-                </strong>
-              </div>
-              <div className="sans-risk">
-                SANS Risk Level: <strong style={{ color: getRiskColor(scanResults.sansRisk) }}>
-                  {scanResults.sansRisk}
-                </strong>
-              </div>
-            </div>
+          
 
             <div className="eye-details">
               <div className="eye-data">
                 <h4>👁️ Left Eye</h4>
                 <div className="metrics">
                   <div className="metric">
-                    <span>Visual Acuity:</span>
-                    <span>{scanResults.leftEye.visualAcuity}</span>
-                  </div>
-                  <div className="metric">
-                    <span>IOP (mmHg):</span>
-                    <span>{scanResults.leftEye.intraocularPressure}</span>
-                  </div>
-                  <div className="metric">
-                    <span>Optic Disc:</span>
-                    <span style={{ color: getHealthColor(scanResults.leftEye.opticDiscSwelling) }}>
-                      {scanResults.leftEye.opticDiscSwelling}
+                    <span>Risk:</span>
+                    <span style={{ color: getRiskColor(scanResults.ai?.eyes?.left?.riskLevel) }}>
+                      {scanResults.ai?.eyes?.left?.riskLevel || 'Low'}
                     </span>
                   </div>
-                  <div className="metric">
-                    <span>Retinal Thickness (μm):</span>
-                    <span>{scanResults.leftEye.retinalThickness}</span>
-                  </div>
-                  <div className="metric">
-                    <span>Blood Vessels:</span>
-                    <span style={{ color: getHealthColor(scanResults.leftEye.bloodVesselChanges) }}>
-                      {scanResults.leftEye.bloodVesselChanges}
-                    </span>
-                  </div>
+                  {!!(scanResults.ai?.eyes?.left?.findings?.length) && (
+                    <div className="metric">
+                      <span>Findings:</span>
+                      <span>
+                        <ul>
+                          {scanResults.ai.eyes.left.findings.map((f, i) => (
+                            <li key={i}>{f}</li>
+                          ))}
+                        </ul>
+                      </span>
+                    </div>
+                  )}
+                  {!!(scanResults.ai?.eyes?.left?.possibleConditions?.length) && (
+                    <div className="metric">
+                      <span>Possible Conditions:</span>
+                      <span>
+                        <ul>
+                          {scanResults.ai.eyes.left.possibleConditions.map((c, i) => (
+                            <li key={i}>{c}</li>
+                          ))}
+                        </ul>
+                      </span>
+                    </div>
+                  )}
+                  {!!(scanResults.ai?.eyes?.left?.recommendedActions?.length) && (
+                    <div className="metric">
+                      <span>Recommended Actions:</span>
+                      <span>
+                        <ul>
+                          {scanResults.ai.eyes.left.recommendedActions.map((a, i) => (
+                            <li key={i}>{a}</li>
+                          ))}
+                        </ul>
+                      </span>
+                    </div>
+                  )}
+                  {!!(scanResults.ai?.eyes?.left?.precautions?.length) && (
+                    <div className="metric">
+                      <span>Precautions:</span>
+                      <span>
+                        <ul>
+                          {scanResults.ai.eyes.left.precautions.map((p, i) => (
+                            <li key={i}>{p}</li>
+                          ))}
+                        </ul>
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -319,41 +399,73 @@ const EyeScanner = () => {
                 <h4>👁️ Right Eye</h4>
                 <div className="metrics">
                   <div className="metric">
-                    <span>Visual Acuity:</span>
-                    <span>{scanResults.rightEye.visualAcuity}</span>
-                  </div>
-                  <div className="metric">
-                    <span>IOP (mmHg):</span>
-                    <span>{scanResults.rightEye.intraocularPressure}</span>
-                  </div>
-                  <div className="metric">
-                    <span>Optic Disc:</span>
-                    <span style={{ color: getHealthColor(scanResults.rightEye.opticDiscSwelling) }}>
-                      {scanResults.rightEye.opticDiscSwelling}
+                    <span>Risk:</span>
+                    <span style={{ color: getRiskColor(scanResults.ai?.eyes?.right?.riskLevel) }}>
+                      {scanResults.ai?.eyes?.right?.riskLevel || 'Low'}
                     </span>
                   </div>
-                  <div className="metric">
-                    <span>Retinal Thickness (μm):</span>
-                    <span>{scanResults.rightEye.retinalThickness}</span>
-                  </div>
-                  <div className="metric">
-                    <span>Blood Vessels:</span>
-                    <span style={{ color: getHealthColor(scanResults.rightEye.bloodVesselChanges) }}>
-                      {scanResults.rightEye.bloodVesselChanges}
-                    </span>
-                  </div>
+                  {!!(scanResults.ai?.eyes?.right?.findings?.length) && (
+                    <div className="metric">
+                      <span>Findings:</span>
+                      <span>
+                        <ul>
+                          {scanResults.ai.eyes.right.findings.map((f, i) => (
+                            <li key={i}>{f}</li>
+                          ))}
+                        </ul>
+                      </span>
+                    </div>
+                  )}
+                  {!!(scanResults.ai?.eyes?.right?.possibleConditions?.length) && (
+                    <div className="metric">
+                      <span>Possible Conditions:</span>
+                      <span>
+                        <ul>
+                          {scanResults.ai.eyes.right.possibleConditions.map((c, i) => (
+                            <li key={i}>{c}</li>
+                          ))}
+                        </ul>
+                      </span>
+                    </div>
+                  )}
+                  {!!(scanResults.ai?.eyes?.right?.recommendedActions?.length) && (
+                    <div className="metric">
+                      <span>Recommended Actions:</span>
+                      <span>
+                        <ul>
+                          {scanResults.ai.eyes.right.recommendedActions.map((a, i) => (
+                            <li key={i}>{a}</li>
+                          ))}
+                        </ul>
+                      </span>
+                    </div>
+                  )}
+                  {!!(scanResults.ai?.eyes?.right?.precautions?.length) && (
+                    <div className="metric">
+                      <span>Precautions:</span>
+                      <span>
+                        <ul>
+                          {scanResults.ai.eyes.right.precautions.map((p, i) => (
+                            <li key={i}>{p}</li>
+                          ))}
+                        </ul>
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
 
-            <div className="recommendations">
-              <h4>💡 Medical Recommendations</h4>
-              <ul>
-                {scanResults.recommendations.map((rec, index) => (
-                  <li key={index}>{rec}</li>
-                ))}
-              </ul>
-            </div>
+            {!!(scanResults.ai?.urgentFlags?.length) && (
+              <div className="recommendations">
+                <h4>🚩 Urgent Flags</h4>
+                <ul>
+                  {scanResults.ai.urgentFlags.map((u, i) => (
+                    <li key={i}>{u}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         )}
       </div>

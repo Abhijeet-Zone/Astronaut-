@@ -7,10 +7,10 @@ function GaugePanel({ formData, apiData, error }) {
     : circumference;
 
   return (
-    <section className="glass rounded-2xl p-5 lg:p-6 w-screen">
+    <section className="glass rounded-2xl p-5 lg:p-6 w-full">
       <h2 className="head text-lg neon mb-4">Fatigue Analysis</h2>
       <div className="flex flex-col items-center gap-4">
-        <div className="gauge relative">
+        <div className="gauge relative mb-8">
           <svg viewBox="0 0 200 200">
             <circle cx="100" cy="100" r="82" stroke="#1f2a49" strokeWidth="16" fill="none" />
             <defs>
@@ -26,9 +26,9 @@ function GaugePanel({ formData, apiData, error }) {
               style={{ transition: 'stroke-dasharray 0.5s ease' }} />
             <circle cx="100" cy="100" r="68" fill="none" stroke="#22d3ee22" strokeWidth="12" />
           </svg>
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <div className="center-num">{error ? 'ERR' : (apiData ? apiData.fatigueScore : '—')}</div>
-            <div className="label mt-1 tracking-[0.2em] text-cyan-200">FATIGUE SCORE</div>
+          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+            <div className="center-num text-center">{error ? 'ERR' : (apiData ? apiData.fatigueScore : '—')}</div>
+            <div className="label mt-1 tracking-[0.2em] text-cyan-200 text-center">FATIGUE SCORE</div>
           </div>
         </div>
 
@@ -52,4 +52,4 @@ function GaugePanel({ formData, apiData, error }) {
   );
 }
 
-export default GaugePanel;
+export default GaugePanel;
