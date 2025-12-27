@@ -4,7 +4,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 // Direct API key (as requested). For production, move this to a server or env file.
-const API_KEY = "AIzaSyAjU7rgLT0GrckRn1wWXZWoeTLC06Nrj48";
+const API_KEY = "AIzaSyC7zLTqQCuj_w_m0vMz-DXPqDL1FgZt3dc";
 const genAI = new GoogleGenerativeAI(API_KEY);
 
 // Try these model IDs in order until one succeeds for generateContent

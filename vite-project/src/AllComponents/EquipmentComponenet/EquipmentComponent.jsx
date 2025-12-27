@@ -343,7 +343,7 @@ function deriveDiagnosis(telemetry, alerts) {
   if (alerts.some((a) => a.message.startsWith("Nav")))
     return {
       component: "Navigation",
-      cause: "Sensor/actuator fault",
+      cause: "Sensor/Equipment fault",
       nextStep: "Switch to redundant sensors, safe mode",
     };
   if (alerts.some((a) => a.message.startsWith("EVA")))

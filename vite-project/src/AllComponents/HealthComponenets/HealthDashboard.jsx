@@ -9,6 +9,7 @@ function HealthDashboard() {
         <thead>
           <tr>
             <th>Health Problem</th>
+            
             <th>Health Solution</th>
             <th>Status</th>
           </tr>

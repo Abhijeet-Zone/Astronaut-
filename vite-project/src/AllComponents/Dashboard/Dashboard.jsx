@@ -310,7 +310,7 @@ function Dashboard() {
             </div>
             <div className="panel-content flex-grow flex flex-col items-center justify-center">
               <div className="text-center">
-                <div className="text-red-400 text-sm mb-4 font-bold uppercase tracking-wider">ACTUATOR FAULT ✅✅</div>
+                <div className="text-red-400 text-sm mb-4 font-bold uppercase tracking-wider">EQUIPMENT FAULT ✅✅</div>
                 <button className="px-6 py-2 text-xs font-bold bg-gray-700/50 border border-gray-500/50 rounded-lg hover:bg-gray-600/50 transition-all duration-300 tracking-wider text-gray-300">
                   ACKNOWLEDGE
                 </button>
